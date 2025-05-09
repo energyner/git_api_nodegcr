@@ -7,6 +7,9 @@ WORKDIR /app/src
 # Copia el resto de los archivos del proyecto
 COPY . .
 
+# Instala pm2-runtime globalmente
+RUN npm install -g pm2-runtime
+
 # Expone los puertos donde se ejecutan los servidores
 EXPOSE 3006 3008 3010
 
