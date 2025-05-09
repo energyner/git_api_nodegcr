@@ -2,6 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import {calcularHuellaCarbono} from '../calculations/carbon-footprint.mjs';
+import * as fs from 'fs'; // Importa el módulo 'fs' para trabajar con el sistema de archivos
+import * as path from 'path'; // Importa el módulo 'path' para manipular rutas de archivos
 
 const app = express();
 
@@ -55,8 +57,58 @@ app.post('/api/huella-carbono', (req, res) => {
     }
 });
 
+// **HEALTH CHECK ENDPOINT (CON CHEQUEO DE IMPORTACIÓN Y FUNCIONAMIENTO)**
+app.get('/health', (req, res) => {
+    let isServerUp = true;
+    let isCalculationFilePresent = false;
+    let isCalculationFunctionWorking = false;
+
+    // Chequea si el archivo carbon-footprint.mjs existe
+    const filePath = path.resolve('./calculations/carbon-footprint.mjs');
+    try {
+        if (fs.existsSync(filePath)) {
+            isCalculationFilePresent = true;
+        }
+    } catch (error) {
+        console.error('Error al verificar el archivo:', error);
+    }
+
+    // Chequea si la función calcularHuellaCarbono está definida e intenta usarla
+    if (typeof calcularHuellaCarbono === 'function') {
+        try {
+            // Intenta ejecutar la función con datos de prueba mínimos
+            const testData = { state: 'FL', person: 1 };
+            const testResult = calcularHuellaCarbono(testData);
+            // Si la función no lanza un error al ejecutarse con datos básicos,
+            // asumimos que está funcionando correctamente (para este health check).
+            if (typeof testResult === 'object' || typeof testResult === 'number') {
+                isCalculationFunctionWorking = true;
+            }
+        } catch (error) {
+            console.error('Error al ejecutar la función calcularHuellaCarbono en el health check:', error);
+        }
+    }
+
+    if (isServerUp && isCalculationFilePresent && isCalculationFunctionWorking) {
+        res.status(200).send('OK - Servidor, archivo de cálculo y función OK');
+    } else {
+        let message = 'ERROR - Health Check Fallido:';
+        if (!isServerUp) {
+            message += ' Servidor no responde.';
+        }
+        if (!isCalculationFilePresent) {
+            message += ' Archivo carbon-footprint.mjs no encontrado.';
+        }
+        if (!isCalculationFunctionWorking) {
+            message += ' Función calcularHuellaCarbono no funciona correctamente o no está definida.';
+        }
+        res.status(500).send(message);
+    }
+});
+
+
+//Iniciar el servidor
 const PORT = 3008;
-//app.listen(PORT, '127.0.0.1', () => {
 app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
     console.log(`4 - API corriendo en el puerto ${PORT}`);
 })
