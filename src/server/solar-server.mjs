@@ -78,7 +78,17 @@ app.post('/api/produccion-solar', calcularProduccionSolar);
 // 4- CODIGO COMUN DEL SERVIDOR 
 
 // Iniciar servidor
-const PORT = 3010;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`4 - API corriendo en http://localhost:${PORT}`);
+
+const PORT = process.env.PORT || 3010;
+console.log('4 -CONSUMO-SERVER: Iniciando...');
+console.log(`4 -CONSUMO-SERVER: PORT is ${PORT}`);
+
+app.get('/', (req, res) => {
+  res.send('4 -Consumo API Activa!');
 });
+
+console.log('4 -CONSUMO-SERVER: Intentando escuchar...');
+
+app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
+    console.log(`4 - API corriendo en http://localhost:${PORT}`);
+}); 

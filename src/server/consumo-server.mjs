@@ -76,7 +76,17 @@ app.post('/api/consumo-energetico', calcularConsumoEnergetico);
 // 4- CODIGO COMUN DEL SERVIDOR 
 
 // Iniciar servidor
-const PORT = 3006;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`4 - API corriendo en http://localhost:${PORT}`);
+
+const PORT = process.env.PORT || 3006;
+console.log('1 - CONSUMO-SERVER: Iniciando...');
+console.log(`1 - CONSUMO-SERVER: PORT is ${PORT}`);
+
+app.get('/', (req, res) => {
+  res.send('1 - Consumo API Activa!');
+});
+
+console.log('1 - CONSUMO-SERVER: Intentando escuchar...');
+
+app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
+    console.log(`1 - API corriendo en http://localhost:${PORT}`);
 }); 

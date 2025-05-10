@@ -7,6 +7,9 @@ WORKDIR /app/src
 # Copia el resto de los archivos del proyecto
 COPY . .
 
+# Instala las dependencias del proyecto <--- ¡Esta línea falta en tu Dockerfile actual!
+RUN npm install
+
 # Instala pm2-runtime globalmente
 RUN npm install -g pm2-runtime
 
@@ -14,4 +17,4 @@ RUN npm install -g pm2-runtime
 EXPOSE 8080
 
 # Define el script de inicio para ejecutar pm2
-CMD ["pm2-runtime", "start", "pm2.config.js", "--no-daemon"]
+CMD ["pm2-runtime", "start", "pm2.config.js"]

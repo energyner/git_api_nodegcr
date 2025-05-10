@@ -108,7 +108,17 @@ app.get('/health', (req, res) => {
 
 
 //Iniciar el servidor
-const PORT = 3008;
+
+const PORT = process.env.PORT || 3008;
+console.log('2 - CONSUMO-SERVER: Iniciando...');
+console.log(`2 - CONSUMO-SERVER: PORT is ${PORT}`);
+
+app.get('/', (req, res) => {
+  res.send('2 - Consumo API Activa!');
+});
+
+console.log('2 - CONSUMO-SERVER: Intentando escuchar...');
+
 app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
-    console.log(`4 - API corriendo en el puerto ${PORT}`);
+    console.log(`2 - API corriendo en el puerto ${PORT}`);
 })

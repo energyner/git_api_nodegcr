@@ -2,7 +2,7 @@ module.exports = {
 apps: [
 {
 name: 'proxy-server', // Nuevo proceso para el proxy
-script: 'src/main.mjs',
+script: 'main.mjs',
 node_args: '--experimental-modules --es-module-specifier-resolution=node',
 instances: 1,
 autorestart: true,
