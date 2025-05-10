@@ -5,6 +5,13 @@ import {calcularHuellaCarbono} from '../calculations/carbon-footprint.mjs';
 import * as fs from 'fs'; // Importa el módulo 'fs' para trabajar con el sistema de archivos
 import * as path from 'path'; // Importa el módulo 'path' para manipular rutas de archivos
 
+// Manejo de la señal SIGINT
+process.on('SIGINT', () => {
+    console.log('Huella de carbono server (3008): Recibida señal SIGINT. Cerrando...');
+    // Aquí podrías agregar lógica para cerrar conexiones o limpiar recursos de este servidor
+    process.exit(0);
+});
+
 const app = express();
 
 // Middlewares
