@@ -3,6 +3,13 @@ import express from 'express';
 import httpProxy from 'http-proxy';
 import cors from 'cors';
 
+// Manejo de la señal SIGINT
+process.on('SIGINT', () => {
+    console.log('Proxy server: Recibida señal SIGINT. Cerrando...');
+    // Aquí podrías agregar lógica para cerrar conexiones o limpiar recursos del proxy
+    process.exit(0);
+});
+
 const app = express();
 const port = process.env.PORT || 8080;
 const proxy = httpProxy.createProxyServer({});
@@ -13,9 +20,6 @@ app.use('/api/consumo-energetico', (req, res) => {
     proxy.web(req, res, { target: 'http://127.0.0.1:3006' });
 });
 
-// app.use('/api/huella-carbono', (req, res) => {
-//     proxy.web(req, res, { target: 'http://localhost:3008' });
-// });
 
 app.use('/api/huella-carbono', (req, res) => {
   proxy.web(req, res, { target: 'http://127.0.0.1:3008' }, (err) => {
