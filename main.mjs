@@ -16,6 +16,12 @@ const proxy = httpProxy.createProxyServer({});
 
 app.use(cors());
 
+// Agregar ruta para la raíz '/'
+app.get('/', (req, res) => {
+    res.status(200).send('Proxy server is running and routing traffic.');
+});
+
+
 app.use('/api/consumo-energetico', (req, res) => {
     proxy.web(req, res, { target: 'http://127.0.0.1:3006' });
 });
