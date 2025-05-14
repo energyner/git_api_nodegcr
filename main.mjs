@@ -2,6 +2,7 @@
 import express from 'express';
 import httpProxy from 'http-proxy';
 import cors from 'cors';
+import path from 'path'; // Importa el módulo 'path'
 
 // Manejo de la señal SIGINT
 process.on('SIGINT', () => {
@@ -15,6 +16,9 @@ const port = process.env.PORT || 8080;
 const proxy = httpProxy.createProxyServer({});
 
 app.use(cors());
+
+// Servir archivos estáticos desde el directorio 'src/client'
+app.use(express.static(path.join(__dirname, 'src', 'client')));
 
 // Agregar ruta para la raíz '/'
 app.get('/', (req, res) => {
