@@ -13,6 +13,9 @@ RUN npm install
 # Instala pm2-runtime globalmente
 RUN npm install -g pm2-runtime
 
+# Instala curl
+RUN apk add --no-cache curl
+
 # Expone el puerto donde el proxy recibirá el tráfico de Cloud Run
 EXPOSE 8080
 
