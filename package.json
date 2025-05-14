@@ -2,7 +2,7 @@
   "name": "git_api_nodegcr",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-consumo": "node src/server/consumo-server.mjs",
