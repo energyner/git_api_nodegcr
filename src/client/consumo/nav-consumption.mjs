@@ -11,7 +11,7 @@ document.getElementById('consumo-form').addEventListener('submit', (event) => {
     const horas = document.getElementById('horas').value;
 
 // Realizar la solicitud al servidor
-    fetch('http://localhost:3006/api/consumo-energetico', {
+    fetch('http://127.0.0.1:3006/api/consumo-energetico', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

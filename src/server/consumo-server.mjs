@@ -95,5 +95,5 @@ app.get('/', (req, res) => {
 console.log('1 - CONSUMO-SERVER: Intentando escuchar...');
 
 app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
-    console.log(`1 - API corriendo en http://localhost:${PORT}`);
+    console.log(`1 - API corriendo en http://127.0.0.1:${PORT}`);
 }); 
