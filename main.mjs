@@ -34,18 +34,21 @@ app.get('/', (req, res) => {
 
 
 app.use('/api/consumo-energetico', (req, res) => {
+     console.log('Redirigiendo a consumo-energetico...');
     proxy.web(req, res, { target: 'http://127.0.0.1:3006' });
 });
 
 
 app.use('/api/huella-carbono', (req, res) => {
     proxy.web(req, res, { target: 'http://127.0.0.1:3008' }, (err) => {
+         console.log('Redirigiendo a huella-carbono...');
         console.error('Error al hacer proxy a huella-carbono:', err);
         res.status(500).send('Error al conectar al servidor interno de huella de carbono');
     });
 });
 
 app.use('/api/produccion-solar', (req, res) => {
+     console.log('Redirigiendo a produccion-solar...');
     proxy.web(req, res, { target: 'http://127.0.0.1:3010' });
 });
 

@@ -20,7 +20,7 @@ RUN apk add --no-cache curl
 EXPOSE 8080
 
 # Define el script de inicio para ejecutar pm2
-CMD ["pm2-runtime", "start", "pm2.config.js"]
+CMD ["pm2-runtime", "start", "pm2.config.js",  "--no-daemon"]
 
 
 
