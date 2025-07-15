@@ -1,27 +1,25 @@
-// // 1- SERVIDOR EXPRESS - PUERTO 3006
-/// src/server/consumo-server.mjs
+// src/server/consumo-server.mjs
 
-import { Router } from 'express'; // Importamos Router de Express
-import cors from 'cors'; // Para manejar CORS
-import { calcularConsumoEnergetico } from '../calculations/energy-consumption.mjs'; // Importamos la función de cálculo
-import * as fs from 'fs'; // Para manejo de archivos (usado en health check)
-import * as path from 'path'; // Para manipulación de rutas (usado en health check)
-import { fileURLToPath } from 'url'; // Necesario para resolver __dirname en módulos ES
+// Importamos el objeto 'express' completo y 'Router'
+import express, { Router } from 'express'; 
+import cors from 'cors'; 
+import { calcularConsumoEnergetico } from '../calculations/energy-consumption.mjs'; 
+import * as fs from 'fs'; 
+import * as path from 'path'; 
+import { fileURLToPath } from 'url'; 
 
 // Obtenemos __filename y __dirname para resolver rutas relativas
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Creamos una instancia de Router en lugar de una aplicación Express completa
+// Creamos una instancia de Router
 const router = Router();
 
-// Middlewares específicos para este router (si son necesarios)
+// 🔹 Middlewares específicos para este router (si son necesarios)
+// Si `main.mjs` ya tiene `app.use(cors())`, esta línea es redundante.
+router.use(cors()); 
 
-router.use(cors());
-router.use(express.json());
-
-// Encabezados HTTP mejorados (generalmente manejados por el middleware `cors` o en `main.mjs`)
-
+// 🔹 Encabezados HTTP mejorados (opcional, si ya están en main.mjs o via cors)
 router.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -29,33 +27,43 @@ router.use((req, res, next) => {
     next();
 });
 
-// 🔹 Soporte para `OPTIONS` en solicitudes CORS (también manejado por `cors` middleware)
-router.options('*', (req, res) => {
+// 🔹 Soporte para `OPTIONS` en solicitudes CORS
+router.options('/', (req, res) => {  // Re-escribe '*' manualmente
     res.sendStatus(200);
 });
 
 // 🔹 Rutas GET
-// La ruta base para este router será montada en `main.mjs` (ej. `/api/consumo`).
-// Por lo tanto, esta ruta GET será accesible en `/api/consumo/api/consumo-energetico`
-
-router.get('/api/consumo-energetico', (req, res) => {
-    console.log("Solicitud GET en /api/consumo-energetico (desde router de consumo)");
-    res.json({ mensaje: 'Usa POST para calcular el consumo energético de equipos' });
+router.get('/consumo-energetico', (req, res) => { // Re-escribe '/consumo-energetico' manualmente
+    console.log("Solicitud GET en /consumo-energetico (desde router de consumo)");
+    res.json({ mensaje: 'Usa POST para calcular el consumo energético de equipos.' });
 });
 
 // 🔹 Health Check con validaciones
-router.get('/health', (req, res) => {
-    // Usamos path.resolve con __dirname para asegurar que la ruta sea correcta
+router.get('/health', (req, res) => { // Re-escribe '/health' manualmente
     const filePath = path.resolve(__dirname, '..', 'calculations', 'energy-consumption.mjs');
     let isCalculationFilePresent = fs.existsSync(filePath);
     let isCalculationFunctionWorking = typeof calcularConsumoEnergetico === 'function';
 
+    if (isCalculationFunctionWorking) {
+        try {
+            const testResult = calcularConsumoEnergetico(100, 10); 
+            if (testResult && typeof testResult.consumo_energetico === 'number') {
+                isCalculationFunctionWorking = true;
+            } else {
+                isCalculationFunctionWorking = false; 
+            }
+        } catch (error) {
+            console.error('Error al ejecutar la función calcularConsumoEnergetico en el health check:', error);
+            isCalculationFunctionWorking = false;
+        }
+    }
+
     if (isCalculationFilePresent && isCalculationFunctionWorking) {
-        res.status(200).json({ status: "OK", message: "Servidor, archivo y función en buen estado" });
+        res.status(200).json({ status: "OK", message: "Servicio de Consumo: Archivo de cálculo y función en buen estado." });
     } else {
         res.status(500).json({
             status: "ERROR",
-            message: "Health Check Fallido",
+            message: "Servicio de Consumo: Health Check Fallido.",
             detalles: {
                 archivo_existe: isCalculationFilePresent,
                 funcion_operativa: isCalculationFunctionWorking
@@ -64,24 +72,17 @@ router.get('/health', (req, res) => {
     }
 });
 
-// 🔹 Rutas POST
-// CORRECCIÓN CRÍTICA: `calcularConsumoEnergetico` es una función de cálculo, no un controlador de Express.
-// Necesitamos un controlador que reciba la solicitud y llame a la función de cálculo.
-router.post('/api/consumo-energetico', (req, res) => {
-    try {
-        // Asumiendo que los datos necesarios para el cálculo vienen en el cuerpo de la solicitud
-        const datosConsumo = req.body;
+// 🔹 Ruta POST para calcular el consumo energético
+router.post('/consumo-energetico', (req, res) => { // Re-escribe '/consumo-energetico' manualmente
+    console.log("Solicitud POST en /consumo-energetico (desde router de consumo)");
+    const { potencia, horas } = req.body; 
 
-        // Aquí deberías validar `datosConsumo` antes de pasarlos a la función
-        if (!datosConsumo || typeof datosConsumo !== 'object') {
-            return res.status(400).json({ error: "Datos de entrada inválidos para el cálculo de consumo." });
-        }
+    const resultadoCalculo = calcularConsumoEnergetico(parseFloat(potencia), parseFloat(horas));
 
-        const resultado = calcularConsumoEnergetico(datosConsumo); // Asegúrate de pasar los argumentos correctos
-        res.status(200).json({ resultado });
-    } catch (error) {
-        console.error("Error al procesar la solicitud POST /api/consumo-energetico:", error);
-        res.status(500).json({ error: "Error interno del servidor al calcular consumo energético." });
+    if (resultadoCalculo.error) {
+        return res.status(400).json({ error: resultadoCalculo.error });
+    } else {
+        res.status(200).json(resultadoCalculo);
     }
 });
 
@@ -92,15 +93,4 @@ router.use((err, req, res, next) => {
     res.status(500).json({ error: "Error interno del servidor en el módulo de consumo, intenta nuevamente" });
 });
 
-
-// EXPORTAR: Exportamos el router para que `main.mjs` pueda usarlo
 export default router;
-
-
-
-
-
-
-
-
-
