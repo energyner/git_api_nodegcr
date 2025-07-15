@@ -1,108 +1,78 @@
-// 1- SERVIDOR EXPRESS - PUERTO 3008
-import express from 'express';
-import cors from 'cors';
-import {calcularHuellaCarbono} from '../calculations/carbon-footprint.mjs';
-import * as fs from 'fs'; // Importa el módulo 'fs' para trabajar con el sistema de archivos
-import * as path from 'path'; // Importa el módulo 'path' para manipular rutas de archivos
+// src/server/footprint-server.mjs
 
-// Manejo de la señal SIGINT
-process.on('SIGINT', () => {
-    console.log('Huella de carbono server (3008): Recibida señal SIGINT. Cerrando...');
-    // Aquí podrías agregar lógica para cerrar conexiones o limpiar recursos de este servidor
-    process.exit(0);
-});
+import { Router } from 'express'; // Importa Router de Express
+import cors from 'cors'; // Importa cors para el manejo de CORS
+import { calcularHuellaCarbono } from '../calculations/carbon-footprint.mjs'; // Importa la función de cálculo pura
+import * as fs from 'fs'; // Importa fs para verificar archivos (en health check)
+import * as path from 'path'; // Importa path para manipular rutas (en health check)
+import { fileURLToPath } from 'url'; // Necesario para resolver __dirname en módulos ES
 
-const app = express();
+// Obtiene __filename y __dirname para resolver rutas relativas
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Middlewares
-app.use(cors()); 
-app.use(express.json());
+// Crea una instancia de Router para este módulo de API
+const router = Router();
 
-// 2- RUTAS GET PARA CADA API
+// Middlewares específicos para este router (opcional)
+router.use(cors());
+router.use(express.json());
 
-
-console.log("3.1 - Calculando  huella-carbono ")
 // Ruta POST para calcular la huella de carbono
-app.post('/api/huella-carbono', (req, res) => {
+// Esta ruta será accesible en /api/huella-carbono
+router.post('/huella-carbono', (req, res) => {
+    console.log("Solicitud POST en /huella-carbono (desde router de huella)");
     try {
-        const parametros = req.body;
+        const parametros = req.body; // Los parámetros ya vienen parseados por express.json()
 
-        // Validaciones básicas
-        if (!parametros.state || parametros.state === "Select your State") {
-            return res.status(400).json({ error: "Estado inválido o no seleccionado" });
+        // Llama a la función de cálculo pura
+        const resultadoCalculo = calcularHuellaCarbono(parametros);
+
+        // Maneja el resultado de la función de cálculo
+        if (resultadoCalculo.error) {
+            // Si la función retornó un error, envía una respuesta 400
+            return res.status(400).json({ error: resultadoCalculo.error });
+        } else {
+            // Si la función retornó un resultado exitoso, envía una respuesta 200
+            res.status(200).json(resultadoCalculo);
+            console.log("Cálculo completado para huella-carbono:", resultadoCalculo);
         }
-        if (!parametros.person || parametros.person <= 0) {
-            return res.status(400).json({ error: "Número de personas debe ser mayor a 0" });
-        }
-
-        // Normalización de datos y asignación de valores predeterminados
-        const datos = {
-            state: parametros.state,
-            elect: parseFloat(parametros.elect) || 0,
-            gas: parseFloat(parametros.gas) || 0,
-            water: parseFloat(parametros.water) || 0,
-            lpg: parseFloat(parametros.lpg) || 0,
-            gn: parseFloat(parametros.gn) || 0,
-            fly: parseFloat(parametros.fly) || 0,
-            cogs: parseFloat(parametros.cogs) || 0,
-            person: parseInt(parametros.person) || 1,
-        };
-
-        // Llamar a la función calcularHuellaCarbono
-        const resultado = calcularHuellaCarbono(datos);
-
-        if (resultado.error) {
-            return res.status(400).json({ error: resultado.error });
-        }
-
-        // Respuesta exitosa
-        res.status(200).json(resultado);
-        console.log("3.2 Cálculo completado para huella-carbono:", resultado);
     } catch (error) {
-        console.error("Error al procesar la solicitud:", error);
+        console.error("Error al procesar la solicitud POST /huella-carbono:", error);
         res.status(500).json({ error: "Error interno del servidor. Intente nuevamente más tarde." });
     }
 });
 
-// **HEALTH CHECK ENDPOINT (CON CHEQUEO DE IMPORTACIÓN Y FUNCIONAMIENTO)**
-app.get('/health', (req, res) => {
-    let isServerUp = true;
-    let isCalculationFilePresent = false;
-    let isCalculationFunctionWorking = false;
+// Health Check para el servicio de huella de carbono
+// Esta ruta será accesible en /api/health (o /api/footprint/health si main.mjs lo monta así)
+router.get('/health', (req, res) => {
+    // Resuelve la ruta al archivo de cálculo de forma robusta
+    const filePath = path.resolve(__dirname, '..', 'calculations', 'carbon-footprint.mjs');
+    let isCalculationFilePresent = fs.existsSync(filePath);
+    let isCalculationFunctionWorking = typeof calcularHuellaCarbono === 'function';
 
-    // Chequea si el archivo carbon-footprint.mjs existe
-    const filePath = path.resolve('./calculations/carbon-footprint.mjs');
-    try {
-        if (fs.existsSync(filePath)) {
-            isCalculationFilePresent = true;
-        }
-    } catch (error) {
-        console.error('Error al verificar el archivo:', error);
-    }
-
-    // Chequea si la función calcularHuellaCarbono está definida e intenta usarla
-    if (typeof calcularHuellaCarbono === 'function') {
+    // Intenta ejecutar la función de cálculo con datos de prueba para verificar su operatividad
+    if (isCalculationFunctionWorking) {
         try {
-            // Intenta ejecutar la función con datos de prueba mínimos
-            const testData = { state: 'FL', person: 1 };
+            // Datos de prueba mínimos para la función calcularHuellaCarbono
+            const testData = { state: 'FL', person: 1, elect: 0, gas: 0, water: 0, lpg: 0, gn: 0, fly: 0, cogs: 0 };
             const testResult = calcularHuellaCarbono(testData);
-            // Si la función no lanza un error al ejecutarse con datos básicos,
-            // asumimos que está funcionando correctamente (para este health check).
-            if (typeof testResult === 'object' || typeof testResult === 'number') {
+            // Verifica que el resultado tenga el formato esperado (ej. un objeto con 'total')
+            if (testResult && typeof testResult.total === 'number') {
                 isCalculationFunctionWorking = true;
+            } else {
+                isCalculationFunctionWorking = false; // La función no retornó el formato esperado
             }
         } catch (error) {
             console.error('Error al ejecutar la función calcularHuellaCarbono en el health check:', error);
+            isCalculationFunctionWorking = false;
         }
     }
 
-    if (isServerUp && isCalculationFilePresent && isCalculationFunctionWorking) {
-        res.status(200).send('OK - Servidor, archivo de cálculo y función OK');
+    if (isCalculationFilePresent && isCalculationFunctionWorking) {
+        res.status(200).send('OK - Servicio Huella de Carbono: Archivo de cálculo y función OK');
     } else {
-        let message = 'ERROR - Health Check Fallido:';
-        if (!isServerUp) {
-            message += ' Servidor no responde.';
-        }
+        let message = 'ERROR - Servicio Huella de Carbono: Health Check Fallido:';
         if (!isCalculationFilePresent) {
             message += ' Archivo carbon-footprint.mjs no encontrado.';
         }
@@ -113,19 +83,9 @@ app.get('/health', (req, res) => {
     }
 });
 
+// ELIMINADO: Las líneas de `process.on('SIGINT')` y `app.listen()`
+// Se gestionan centralmente en `main.mjs` y por el entorno de Cloud Run.
 
-//Iniciar el servidor
+// EXPORTAR: Exporta el router para que `main.mjs` pueda montarlo
+export default router;
 
-const PORT = process.env.PORT || 3008;
-console.log('2 - CONSUMO-SERVER: Iniciando...');
-console.log(`2 - CONSUMO-SERVER: PORT is ${PORT}`);
-
-app.get('/', (req, res) => {
-  res.send('2 - Consumo API Activa!');
-});
-
-console.log('2 - CONSUMO-SERVER: Intentando escuchar...');
-
-app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
-    console.log(`2 - API corriendo en el puerto ${PORT}`);
-})

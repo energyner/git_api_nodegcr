@@ -1,3 +1,20 @@
+// src/calculations/carbon-footprint.mjs
+
+/**
+ * Calcula la huella de carbono basada en el estado y el consumo de varios recursos.
+ *
+ * @param {object} params - Objeto con los parámetros de cálculo.
+ * @param {string} params.state - El estado para el cálculo de emisiones per cápita.
+ * @param {number} [params.elect=0] - Consumo de electricidad.
+ * @param {number} [params.gas=0] - Consumo de gas.
+ * @param {number} [params.water=0] - Consumo de agua.
+ * @param {number} [params.lpg=0] - Consumo de GLP.
+ * @param {number} [params.gn=0] - Consumo de gas natural.
+ * @param {number} [params.fly=0] - Millas de vuelo.
+ * @param {number} [params.cogs=0] - Consumo de bienes.
+ * @param {number} [params.person=1] - Número de personas en el hogar.
+ * @returns {object} - Un objeto con los resultados de la huella de carbono o un objeto de error.
+ */
 export function calcularHuellaCarbono({ state, elect = 0, gas = 0, water = 0, lpg = 0, gn = 0, fly = 0, cogs = 0, person = 1 }) {
     // Validación del estado
     if (!state || state === "Select your State") {
@@ -26,24 +43,25 @@ export function calcularHuellaCarbono({ state, elect = 0, gas = 0, water = 0, lp
     const coef_fly = fly < 1000 ? 0.55 : 0.33;
 
     // Cálculos individuales
-    const e = Math.round(elect * 0.991) || 0;
-    const t = Math.round(gas * 19.6) || 0;
-    const c = Math.round(water * 0.054) || 0;
-    const l = Math.round(lpg * 3) || 0;
-    const o = Math.round(gn * 0.117) || 0;
-    const f = Math.round(fly * coef_fly) || 0;
-    const u = Math.round(cogs * 0.53) || 0;
+    // Asegurarse de que los valores de entrada sean numéricos antes de operar
+    const e = Math.round(parseFloat(elect) * 0.991) || 0;
+    const t = Math.round(parseFloat(gas) * 19.6) || 0;
+    const c = Math.round(parseFloat(water) * 0.054) || 0;
+    const l = Math.round(parseFloat(lpg) * 3) || 0;
+    const o = Math.round(parseFloat(gn) * 0.117) || 0;
+    const f = Math.round(parseFloat(fly) * coef_fly) || 0;
+    const u = Math.round(parseFloat(cogs) * 0.53) || 0;
 
     // Cálculo total
     const resultado = Math.round(e + t + c + l + o + f + u);
-    const estado=state;
-    const per_capita = Math.round(resultado / person);
+    const estado = state;
+    const per_capita = Math.round(resultado / (parseInt(person) || 1)); // Asegurarse que person es un número
 
     // Emisiones del estado seleccionado
     const per_capita_estado = emisionesPerCapitaPorEstado[state] || 0;
 
     // Cálculos comparativos
-    const porcentajeEstado = Math.round((per_capita / per_capita_estado) * 100);
+    const porcentajeEstado = per_capita_estado > 0 ? Math.round((per_capita / per_capita_estado) * 100) : 0;
     const porcentajeUSA = Math.round((per_capita / promedioUSA) * 100);
     const porcentajeMundial = Math.round((per_capita / promedioMundial) * 100);
 

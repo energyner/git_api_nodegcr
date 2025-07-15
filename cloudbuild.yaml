@@ -1,0 +1,41 @@
+# git_api_nodegcr/cloudbuild.yaml
+steps:
+  # Paso 1: Construir la imagen de Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/${PROJECT_ID}/git-api-nodegcr:${_TAG_NAME}', '.']
+    # La variable _TAG_NAME puede ser un hash de commit, una marca de tiempo, etc.
+    # Por defecto, Cloud Build suele usar el hash del commit.
+    id: BuildDockerImage
+
+  # Paso 2: Empujar la imagen al Google Container Registry (GCR)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${PROJECT_ID}/git-api-nodegcr:${_TAG_NAME}']
+    id: PushToGCR
+
+  # Paso 3: Desplegar la imagen en Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - git-api-nodegcr  # El nombre del servicio Cloud Run
+      - --image
+      - gcr.io/${PROJECT_ID}/git-api-nodegcr:${_TAG_NAME}
+      - --region
+      - us-east1         # Asegúrate de que esta sea la región correcta
+      - --platform
+      - managed
+      - --allow-unauthenticated # Permite acceso no autenticado. Quita esto para servicios internos.
+      - --timeout=300 # Opcional: Aumenta el tiempo de espera del despliegue si tu servicio es grande
+      # - --set-env-vars=MY_ENV_VAR=my_value # Ejemplo: para configurar variables de entorno en el despliegue
+    env:
+      - 'CLOUDSDK_CORE_DISABLE_PROMPTS=1' # Evita prompts interactivos durante el despliegue
+    id: DeployToCloudRun
+
+# Define variables sustitutas que puedes usar en el script
+substitutions:
+  _TAG_NAME: 'latest' # Puedes usar $(date +%Y%m%d%H%M%S) para una marca de tiempo o un hash de commit
+
+# Define el formato de salida para las imágenes construidas
+images:
+  - 'gcr.io/${PROJECT_ID}/git-api-nodegcr:${_TAG_NAME}'

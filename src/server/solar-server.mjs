@@ -1,45 +1,43 @@
-// 1- SERVIDOR EXPRESS - PUERTO 3010
-import express from 'express';
-import cors from 'cors';
-import { calcularProduccionSolar } from '../calculations/solar-production.mjs';
-import * as fs from 'fs'; // Importa el módulo 'fs' para trabajar con el sistema de archivos
-import * as path from 'path'; // Importa el módulo 'path' para manipular rutas de archivos
+// src/server/solar-server.mjs
 
-// Manejo de la señal SIGINT
-process.on('SIGINT', () => {
-    console.log('Solar server (3010): Recibida señal SIGINT. Cerrando...');
-    // Aquí podrías agregar lógica para cerrar conexiones o limpiar recursos de este servidor
-    process.exit(0);
-});
+import { Router } from 'express'; // Importamos Router de Express
+import cors from 'cors'; // Para manejar CORS
+import { calcularProduccionSolar } from '../calculations/solar-production.mjs'; // Importamos la función de cálculo
+import * as fs from 'fs'; // Para manejo de archivos (usado en health check)
+import * as path from 'path'; // Para manipulación de rutas (usado en health check)
+import { fileURLToPath } from 'url'; // Necesario para resolver __dirname en módulos ES
 
-const app = express();
+// Obtenemos __filename y __dirname para resolver rutas relativas
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Middlewares
-app.use(cors()); 
-app.use(express.json());
+// Creamos una instancia de Router
+const router = Router();
 
-// 2- RUTAS GET PARA CADA API
+// Middlewares específicos para este router
+router.use(cors());
+router.use(express.json());
 
-//  Api produccion-solar
-app.get('/api/produccion-solar', (req, res) => {
-    console.log("1 - Captando solicitud GET en /api/produccion-solar");
+// Rutas GET para la API de producción solar
+router.get('/api/produccion-solar', (req, res) => {
+    console.log("Solicitud GET en /api/produccion-solar (desde router solar)");
     res.send('Usa POST para calcular la produccion-solar de paneles solares.');
 });
 
-// **HEALTH CHECK ENDPOINT (CON CHEQUEO DE IMPORTACIÓN Y FUNCIONAMIENTO)**
-app.get('/health', (req, res) => {
-    let isServerUp = true;
+// 🔹 HEALTH CHECK ENDPOINT (CON CHEQUEO DE IMPORTACIÓN Y FUNCIONAMIENTO)
+router.get('/health', (req, res) => {
+    let isServerUp = true; // Siempre true si el router está respondiendo
     let isCalculationFilePresent = false;
     let isCalculationFunctionWorking = false;
 
     // Chequea si el archivo solar-production.mjs existe
-    const filePath = path.resolve('./calculations/solar-production.mjs');
+    const filePath = path.resolve(__dirname, '..', 'calculations', 'solar-production.mjs');
     try {
         if (fs.existsSync(filePath)) {
             isCalculationFilePresent = true;
         }
     } catch (error) {
-        console.error('Error al verificar el archivo:', error);
+        console.error('Error al verificar el archivo de cálculo en health check:', error);
     }
 
     // Chequea si la función calcularProduccionSolar está definida e intenta usarla
@@ -59,9 +57,9 @@ app.get('/health', (req, res) => {
     }
 
     if (isServerUp && isCalculationFilePresent && isCalculationFunctionWorking) {
-        res.status(200).send('OK - Servidor, archivo de cálculo y función OK');
+        res.status(200).send('OK - Servidor Solar, archivo de cálculo y función OK');
     } else {
-        let message = 'ERROR - Health Check Fallido:';
+        let message = 'ERROR - Health Check Solar Fallido:';
         if (!isServerUp) {
             message += ' Servidor no responde.';
         }
@@ -75,27 +73,25 @@ app.get('/health', (req, res) => {
     }
 });
 
+// Rutas POST
+// CORRECCIÓN CRÍTICA: `calcularProduccionSolar` es una función de cálculo, no un controlador de Express.
+// Necesitamos un controlador que reciba la solicitud y llame a la función de cálculo.
+router.post('/api/produccion-solar', (req, res) => {
+    try {
+        const datosSolar = req.body; // Asumiendo que los datos vienen en el cuerpo
 
+        if (!datosSolar || typeof datosSolar !== 'object') {
+            return res.status(400).json({ error: "Datos de entrada inválidos para el cálculo de producción solar." });
+        }
 
-// 3- PROCESADORES PARA CAPTAR POR POST DE CADA API
-
-// Importamos produccion-solar 
-app.post('/api/produccion-solar', calcularProduccionSolar);
-
-// 4- CODIGO COMUN DEL SERVIDOR 
-
-// Iniciar servidor
-
-const PORT = process.env.PORT || 3010;
-console.log('4 -CONSUMO-SERVER: Iniciando...');
-console.log(`4 -CONSUMO-SERVER: PORT is ${PORT}`);
-
-app.get('/', (req, res) => {
-  res.send('4 -Consumo API Activa!');
+        const resultado = calcularProduccionSolar(datosSolar); // Asegúrate de pasar los argumentos correctos
+        res.status(200).json({ resultado });
+    } catch (error) {
+        console.error("Error al procesar la solicitud POST /api/produccion-solar:", error);
+        res.status(500).json({ error: "Error interno del servidor al calcular producción solar." });
+    }
 });
 
-console.log('4 -CONSUMO-SERVER: Intentando escuchar...');
+// EXPORTAR: Exportamos el router para que `main.mjs` pueda usarlo
+export default router;
 
-app.listen(PORT, '0.0.0.0', () => {//facilitando acceder desde diferentes maquinas en la misma red
-    console.log(`4 - API corriendo en http://127.0.0.1:${PORT}`);
-}); 

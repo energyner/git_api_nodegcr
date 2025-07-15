@@ -1,23 +1,28 @@
 {
-  "name": "git_api_nodegcr",
+"name": "git-api-nodegcr",
   "version": "1.0.0",
-  "description": "",
+  "description": "API modular para la gestión de datos de energía desplegada en Google Cloud Run.",
   "main": "main.mjs",
+  "type": "module", 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-consumo": "node src/server/consumo-server.mjs",
-    "start-footprint": "node src/server/footprint-server.mjs",
-    "start-solar": "node src/server/solar-server.mjs",
-    "start-dev": "concurrently \"npm run start-consumo\" \"npm run start-footprint\" \"npm run start-solar\""
+    "start": "node main.mjs",
+    "dev": "node --watch main.mjs"  
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "node",
+    "express",
+    "api",
+    "microservices",
+    "cloudrun",
+    "gcp"
+  ],
+  "author": "energyner",
   "license": "ISC",
-  "dependencies": {
-    "cors": "^2.8.5",
+   "dependencies": {
     "express": "^5.1.0",
-    "http-proxy": "^1.18.1"
-  },
+    "pm2": "^5.3.0"
+   },
   "devDependencies": {
     "concurrently": "^9.1.2"
   }

@@ -1,26 +1,23 @@
 # Usa una imagen oficial de Node.js
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Establece el directorio de trabajo
-WORKDIR /app/src
+WORKDIR /app
 
 # Copia el resto de los archivos del proyecto
-COPY . .
+COPY package.json package-lock.json ./
 
 # Instala las dependencias del proyecto 
-RUN npm install
+RUN npm install --omit=dev
 
-# Instala pm2-runtime globalmente
-RUN npm install -g pm2-runtime
-
-# Instala curl
-RUN apk add --no-cache curl
+# Copia todo el código fuente de tu aplicación al directorio de trabajo
+COPY . .    
 
 # Expone el puerto donde el proxy recibirá el tráfico de Cloud Run
 EXPOSE 8080
 
 # Define el script de inicio para ejecutar pm2
-CMD ["pm2-runtime", "start", "pm2.config.js"]
+CMD ["npx", "pm2-runtime", "start", "pm2.config.js"]
 
 
 
