@@ -26,7 +26,7 @@ console.log("Formulario enviado con los datos:");
 
     try {
         // Enviar los datos al servidor
-        const response = await fetch(api_Url + "/api/huella-carbono", {
+        const response = await fetch(api_Url + "/api/footprint/huella-carbono", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

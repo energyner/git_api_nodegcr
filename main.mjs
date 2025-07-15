@@ -260,7 +260,7 @@ try {
 
 // 🔹 Listado de rutas activas
 console.log('🔍 Rutas registradas en Express:');
-app._router.stack.forEach((middleware) => {
+app._router?.stack?.forEach((middleware) => {
   if (middleware.route) {
     console.log('📌 Ruta directa:', middleware.route.path);
   } else if (middleware.name === 'router' && middleware.regexp) {
