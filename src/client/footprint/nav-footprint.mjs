@@ -6,7 +6,11 @@
  * formularios y los mensajes de impresion.  */
 
 //API huella-carbono
-const api_Url = 'http://127.0.0.1:8080';
+// 🌐 Detectar entorno y definir URL base
+const BASE_URL = window.location.hostname === "localhost"
+  ? "http://127.0.0.1:8080"
+  : "https://energyner-1015551020086.us-east1.run.app";
+
 document.getElementById("calcular").addEventListener("click", async function (event) {
     event.preventDefault();
 console.log("Formulario enviado con los datos:");
@@ -26,7 +30,7 @@ console.log("Formulario enviado con los datos:");
 
     try {
         // Enviar los datos al servidor
-        const response = await fetch(api_Url + "/api/huella/huella-carbono", {
+        const response = await fetch(`${BASE_URL}/api/huella/huella-carbono`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
