@@ -1,5 +1,5 @@
 # Usa una imagen oficial de Node.js
-FROM node:20-alpine
+FROM node:20
 
 # Establece el directorio de trabajo
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 EXPOSE 8080
 
 # Define el script de inicio para ejecutar pm2
-CMD ["npx", "pm2-runtime", "start", "pm2.config.js"]
+CMD [ "pm2-runtime", "start", "pm2.config.js"]
 
 
 
