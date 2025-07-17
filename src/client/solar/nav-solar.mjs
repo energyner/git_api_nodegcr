@@ -83,7 +83,7 @@ document.getElementById('produccion-form').addEventListener('submit', (event) =>
 
     // Actualizar la interfaz del navegador con el resultado
     const resultadoSolar = document.getElementById('resultadoSolar');
-    resultadoSolar.textContent = `Producción solar calculada: ${data.produccion_solar} kWh`;
+    resultadoSolar.textContent = `Producción solar calculada: ${data.produccion_solar} Wh`;
     resultadoSolar.style.color = "red";
   })
   .catch(error => {
