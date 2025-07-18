@@ -1,7 +1,8 @@
 // src/server/footprint-server.mjs
 
 import express, { Router } from 'express'; // Importa Router de Express
-import cors from 'cors'; // Importa cors para el manejo de CORS
+// No necesitamos 'cors' aquí si ya se maneja en main.mjs
+//import cors from 'cors'; // Importa cors para el manejo de CORS
 import { calcularHuellaCarbono } from '../calculations/carbon-footprint.mjs'; // Importa la función de cálculo pura
 import * as fs from 'fs'; // Importa fs para verificar archivos (en health check)
 import * as path from 'path'; // Importa path para manipular rutas (en health check)
@@ -15,7 +16,7 @@ const __dirname = path.dirname(__filename);
 const router = Router();
 
 // Middlewares específicos para este router (opcional)
-router.use(cors());
+//router.use(cors());
 
 // Ruta POST para calcular la huella de carbono
 // Esta ruta será accesible en /huella-carbono
