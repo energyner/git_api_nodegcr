@@ -57,7 +57,7 @@ export function calcularConsumoEnergetico(parametros) {
     try {
         console.log("Parámetros recibidos para cálculo:", potencia, horas);
         // Calcula el consumo en Wh y luego lo convierte a kWh
-        const consumo_kwh = (potencia * horas) / 1000; // ¡Convertir Wh a kWh!
+        const consumo_kwh = (potencia * horas) ; 
         console.log("1.2 - Cálculo de consumo resuelto (kWh):", consumo_kwh);
 
         // Retorna un objeto con el resultado, tal como espera el servidor y el frontend
