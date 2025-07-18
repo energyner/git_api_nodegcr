@@ -1,7 +1,7 @@
 //  Detectar entorno y definir URL base
 const BASE_URL = window.location.hostname === "localhost"
   ? "http://127.0.0.1:8080"
-  : "https://energyner-1015551020086.us-east1.run.app";
+  : "https://energy-607964761561.us-east1.run.app/";
 
 // Captando evento del formulario
 document.getElementById('produccion-form').addEventListener('submit', (event) => {
